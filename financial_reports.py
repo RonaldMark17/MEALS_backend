@@ -1024,7 +1024,15 @@ def _serialize_school_year_detail(db: Session, school_year: models.SchoolYear) -
             "value": beginning_cash_auto,
             "source": beginning_cash_auto_source,
         }
-        default_inputs["beginning_cash_on_hand"] = report["beginning_cash_on_hand"]
+        # Always use the auto-carried value for default_inputs so the draft
+        # input starts with the correct carry-forward from the previous month's
+        # Current Balance, even if the report was previously saved with a
+        # different beginning_cash that locked the manual override.
+        default_inputs["beginning_cash_on_hand"] = (
+            _round_money(beginning_cash_auto)
+            if beginning_cash_auto is not None
+            else report["beginning_cash_on_hand"]
+        )
         default_inputs["current_sales"] = report["current_sales"]
         report["auto_inputs"] = auto_inputs
         report["default_inputs"] = default_inputs
